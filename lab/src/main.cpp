@@ -135,6 +135,72 @@ std::vector<float> transform(std::vector<float> verts, float scale,
   return verts;
 }
 
+std::vector<std::vector<float>> letterS = {
+    // top bar
+    {-0.9f, 0.6f, 0.0f, -0.9f, 0.5f, 0.0f, -0.5f, 0.6f, 0.0f, -0.5f, 0.5f,
+     0.0f},
+    // left-top stroke
+    {-0.9f, 0.5f, 0.0f, -0.9f, 0.0f, 0.0f, -0.8f, 0.5f, 0.0f, -0.8f, 0.0f,
+     0.0f},
+    // middle bar
+    {-0.9f, 0.0f, 0.0f, -0.9f, 0.1f, 0.0f, -0.5f, 0.0f, 0.0f, -0.5f, 0.1f,
+     0.0f},
+    // right-bottom stroke
+    {-0.5f, 0.0f, 0.0f, -0.5f, -0.5f, 0.0f, -0.6f, 0.0f, 0.0f, -0.6f, -0.5f,
+     0.0f},
+    // bottom bar
+    {-0.9f, -0.5f, 0.0f, -0.9f, -0.4f, 0.0f, -0.5f, -0.5f, 0.0f, -0.5f, -0.4f,
+     0.0f},
+};
+
+std::vector<std::vector<float>> letterI = {
+    // top bar
+    {-0.4f, 0.6f, 0.0f, -0.4f, 0.5f, 0.0f, 0.1f, 0.6f, 0.0f, 0.1f, 0.5f, 0.0f},
+    // middle bar
+    {-0.2f, 0.5f, 0.0f, -0.1f, 0.5f, 0.0f, -0.2f, -0.4f, 0.0f, -0.1f, -0.4f,
+     0.0f},
+    // bottom bar
+    {-0.4f, -0.4f, 0.0f, -0.4f, -0.5f, 0.0f, 0.1f, -0.4f, 0.0f, 0.1f, -0.5f,
+     0.0f}};
+
+std::vector<std::vector<float>> letterJ = {
+    // top bar
+    {0.2f, 0.6f, 0.0f, 0.2f, 0.5f, 0.0f, 0.7f, 0.6f, 0.0f, 0.7f, 0.5f, 0.0f},
+    // middle bar
+    {0.4f, 0.5f, 0.0f, 0.4f, -0.4f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.4f, 0.0f},
+    // bottom bar
+    {0.2f, -0.4f, 0.0f, 0.2f, -0.5f, 0.0f, 0.5f, -0.4f, 0.0f, 0.5f, -0.5f,
+     0.0f}};
+
+std::vector<std::vector<float>> letterA = {
+    // '/'
+    {0.85f, 0.6f, 0.0f, 0.75f, -0.5f, 0.0f, 0.95f, 0.6f, 0.0f, 0.85f, -0.5f,
+     0.0f},
+    //  '\'
+    {0.95f, 0.6f, 0.0f, 1.05f, -0.5f, 0.0f, 1.05f, 0.6f, 0.0f, 1.15f, -0.5f,
+     0.0f},
+    //  middle bar
+    {0.9f, 0.05f, 0.0f, 0.9f, -0.05f, 0.0f, 1.0f, 0.05f, 0.0f, 1.0f, -0.05f,
+     0.0f}};
+
+std::vector<std::vector<float>> letterN = {
+    // '|'
+    {1.25f, 0.6f, 0.0f, 1.25f, -0.5f, 0.0f, 1.35f, 0.6f, 0.0f, 1.35f, -0.5f,
+     0.0f},
+    //  '\'
+    {1.35f, 0.6f, 0.0f, 1.45f, -0.5f, 0.0f, 1.45f, 0.6f, 0.0f, 1.55f, -0.5f,
+     0.0f},
+    //  '|'
+    {1.55f, 0.6f, 0.0f, 1.55f, -0.5f, 0.0f, 1.65f, 0.6f, 0.0f, 1.65f, -0.5f,
+     0.0f}};
+
+void loadLetter(std::vector<Mesh> &meshes,
+                const std::vector<std::vector<float>> &letter, float scale,
+                float offsetX, float offsetY) {
+  for (auto &verts : letter)
+    meshes.push_back(createMesh(transform(verts, scale, offsetX, offsetY), 3));
+}
+
 int main() {
   GLFWwindow *window = createWindow(800, 600, "OpenGL Triangle");
   if (!window)
@@ -143,88 +209,14 @@ int main() {
   unsigned int shaderProgram =
       createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-  std::vector<std::vector<float>> letterS = {
-      // top bar
-      {-0.9f, 0.6f, 0.0f, -0.9f, 0.5f, 0.0f, -0.5f, 0.6f, 0.0f, -0.5f, 0.5f,
-       0.0f},
-      // left-top stroke
-      {-0.9f, 0.5f, 0.0f, -0.9f, 0.0f, 0.0f, -0.8f, 0.5f, 0.0f, -0.8f, 0.0f,
-       0.0f},
-      // middle bar
-      {-0.9f, 0.0f, 0.0f, -0.9f, 0.1f, 0.0f, -0.5f, 0.0f, 0.0f, -0.5f, 0.1f,
-       0.0f},
-      // right-bottom stroke
-      {-0.5f, 0.0f, 0.0f, -0.5f, -0.5f, 0.0f, -0.6f, 0.0f, 0.0f, -0.6f, -0.5f,
-       0.0f},
-      // bottom bar
-      {-0.9f, -0.5f, 0.0f, -0.9f, -0.4f, 0.0f, -0.5f, -0.5f, 0.0f, -0.5f, -0.4f,
-       0.0f},
-  };
-
-  std::vector<std::vector<float>> letterI = {
-      // top bar
-      {-0.4f, 0.6f, 0.0f, -0.4f, 0.5f, 0.0f, 0.1f, 0.6f, 0.0f, 0.1f, 0.5f,
-       0.0f},
-      // middle bar
-      {-0.2f, 0.5f, 0.0f, -0.1f, 0.5f, 0.0f, -0.2f, -0.4f, 0.0f, -0.1f, -0.4f,
-       0.0f},
-      // bottom bar
-      {-0.4f, -0.4f, 0.0f, -0.4f, -0.5f, 0.0f, 0.1f, -0.4f, 0.0f, 0.1f, -0.5f,
-       0.0f}};
-
-  std::vector<std::vector<float>> letterJ = {
-      // top bar
-      {0.2f, 0.6f, 0.0f, 0.2f, 0.5f, 0.0f, 0.7f, 0.6f, 0.0f, 0.7f, 0.5f, 0.0f},
-      // middle bar
-      {0.4f, 0.5f, 0.0f, 0.4f, -0.4f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.4f,
-       0.0f},
-      // bottom bar
-      {0.2f, -0.4f, 0.0f, 0.2f, -0.5f, 0.0f, 0.5f, -0.4f, 0.0f, 0.5f, -0.5f,
-       0.0f}};
-
-  std::vector<std::vector<float>> letterA = {
-      // '/'
-      {0.85f, 0.6f, 0.0f, 0.75f, -0.5f, 0.0f, 0.95f, 0.6f, 0.0f, 0.85f, -0.5f,
-       0.0f},
-      //  '\'
-      {0.95f, 0.6f, 0.0f, 1.05f, -0.5f, 0.0f, 1.05f, 0.6f, 0.0f, 1.15f, -0.5f,
-       0.0f},
-      //  middle bar
-      {0.9f, 0.05f, 0.0f, 0.9f, -0.05f, 0.0f, 1.0f, 0.05f, 0.0f, 1.0f, -0.05f,
-       0.0f}};
-
-  std::vector<std::vector<float>> letterN = {
-      // '|'
-      {1.25f, 0.6f, 0.0f, 1.25f, -0.5f, 0.0f, 1.35f, 0.6f, 0.0f, 1.35f, -0.5f,
-       0.0f},
-      //  '\'
-      {1.35f, 0.6f, 0.0f, 1.45f, -0.5f, 0.0f, 1.45f, 0.6f, 0.0f, 1.55f, -0.5f,
-       0.0f},
-      //  '|'
-      {1.55f, 0.6f, 0.0f, 1.55f, -0.5f, 0.0f, 1.65f, 0.6f, 0.0f, 1.65f, -0.5f,
-       0.0f}};
-
-  std::vector<Mesh> meshS;
-  std::vector<Mesh> meshI;
-  std::vector<Mesh> meshJ;
-  std::vector<Mesh> meshA;
-  std::vector<Mesh> meshN;
-
-  float scale = 0.2f;
-  for (auto &verts : letterS)
-    meshS.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
-
-  for (auto &verts : letterI)
-    meshI.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
-
-  for (auto &verts : letterJ)
-    meshJ.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
-
-  for (auto &verts : letterA)
-    meshA.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
-
-  for (auto &verts : letterN)
-    meshN.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
+  float scale = 0.4f;
+  float gap = 0.0f;
+  std::vector<Mesh> meshes;
+  loadLetter(meshes, letterS, scale, gap * 0, 0.0f);
+  loadLetter(meshes, letterI, scale, gap * 1, 0.0f);
+  loadLetter(meshes, letterJ, scale, gap * 2, 0.0f);
+  loadLetter(meshes, letterA, scale, gap * 3, 0.0f);
+  loadLetter(meshes, letterN, scale, gap * 4, 0.0f);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe
 
@@ -235,40 +227,15 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-    for (auto &m : meshS)
-      drawMesh(m);
-
-    for (auto &m : meshI)
-      drawMesh(m);
-
-    for (auto &m : meshJ)
-      drawMesh(m);
-
-    for (auto &m : meshA)
-      drawMesh(m);
-
-    for (auto &m : meshN)
+    for (auto &m : meshes)
       drawMesh(m);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
-  for (auto &m : meshS)
+  for (auto &m : meshes)
     deleteMesh(m);
-
-  for (auto &m : meshI)
-    deleteMesh(m);
-
-  for (auto &m : meshJ)
-    deleteMesh(m);
-
-  for (auto &m : meshA)
-    deleteMesh(m);
-
-  for (auto &m : meshN)
-    deleteMesh(m);
-
   glDeleteProgram(shaderProgram);
   glfwTerminate();
   return 0;
