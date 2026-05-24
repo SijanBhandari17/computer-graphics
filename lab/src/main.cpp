@@ -174,23 +174,57 @@ int main() {
 
   std::vector<std::vector<float>> letterJ = {
       // top bar
-      {-0.4f, 0.6f, 0.0f, -0.4f, 0.5f, 0.0f, 0.1f, 0.6f, 0.0f, 0.1f, 0.5f,
-       0.0f},
+      {0.2f, 0.6f, 0.0f, 0.2f, 0.5f, 0.0f, 0.7f, 0.6f, 0.0f, 0.7f, 0.5f, 0.0f},
       // middle bar
-      {-0.2f, 0.5f, 0.0f, -0.1f, 0.5f, 0.0f, -0.2f, -0.4f, 0.0f, -0.1f, -0.4f,
+      {0.4f, 0.5f, 0.0f, 0.4f, -0.4f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.4f,
        0.0f},
       // bottom bar
-      {-0.4f, -0.4f, 0.0f, -0.4f, -0.5f, 0.0f, 0.1f, -0.4f, 0.0f, 0.1f, -0.5f,
+      {0.2f, -0.4f, 0.0f, 0.2f, -0.5f, 0.0f, 0.5f, -0.4f, 0.0f, 0.5f, -0.5f,
        0.0f}};
-  std::vector<Mesh> meshS;
-  float scale = 0.4f;
 
+  std::vector<std::vector<float>> letterA = {
+      // '/'
+      {0.85f, 0.6f, 0.0f, 0.75f, -0.5f, 0.0f, 0.95f, 0.6f, 0.0f, 0.85f, -0.5f,
+       0.0f},
+      //  '\'
+      {0.95f, 0.6f, 0.0f, 1.05f, -0.5f, 0.0f, 1.05f, 0.6f, 0.0f, 1.15f, -0.5f,
+       0.0f},
+      //  middle bar
+      {0.9f, 0.05f, 0.0f, 0.9f, -0.05f, 0.0f, 1.0f, 0.05f, 0.0f, 1.0f, -0.05f,
+       0.0f}};
+
+  std::vector<std::vector<float>> letterN = {
+      // '|'
+      {1.25f, 0.6f, 0.0f, 1.25f, -0.5f, 0.0f, 1.35f, 0.6f, 0.0f, 1.35f, -0.5f,
+       0.0f},
+      //  '\'
+      {1.35f, 0.6f, 0.0f, 1.45f, -0.5f, 0.0f, 1.45f, 0.6f, 0.0f, 1.55f, -0.5f,
+       0.0f},
+      //  '|'
+      {1.55f, 0.6f, 0.0f, 1.55f, -0.5f, 0.0f, 1.65f, 0.6f, 0.0f, 1.65f, -0.5f,
+       0.0f}};
+
+  std::vector<Mesh> meshS;
   std::vector<Mesh> meshI;
+  std::vector<Mesh> meshJ;
+  std::vector<Mesh> meshA;
+  std::vector<Mesh> meshN;
+
+  float scale = 0.2f;
   for (auto &verts : letterS)
     meshS.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
 
   for (auto &verts : letterI)
     meshI.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
+
+  for (auto &verts : letterJ)
+    meshJ.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
+
+  for (auto &verts : letterA)
+    meshA.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
+
+  for (auto &verts : letterN)
+    meshN.push_back(createMesh(transform(verts, scale, 0.0f, 0.0f), 3));
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe
 
@@ -207,6 +241,15 @@ int main() {
     for (auto &m : meshI)
       drawMesh(m);
 
+    for (auto &m : meshJ)
+      drawMesh(m);
+
+    for (auto &m : meshA)
+      drawMesh(m);
+
+    for (auto &m : meshN)
+      drawMesh(m);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -215,6 +258,15 @@ int main() {
     deleteMesh(m);
 
   for (auto &m : meshI)
+    deleteMesh(m);
+
+  for (auto &m : meshJ)
+    deleteMesh(m);
+
+  for (auto &m : meshA)
+    deleteMesh(m);
+
+  for (auto &m : meshN)
     deleteMesh(m);
 
   glDeleteProgram(shaderProgram);
