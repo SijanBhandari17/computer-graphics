@@ -10,6 +10,8 @@ find_package(OpenGL REQUIRED)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
+    src/shaders.cpp
+    src/lab-1/lab1.cpp
     glad.c   # add glad.c as a source
 )
 add_custom_target(run
