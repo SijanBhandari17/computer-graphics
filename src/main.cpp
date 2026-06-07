@@ -1,7 +1,7 @@
 #include "shaders.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "lab-1/lab1.h"
+#include "lab-2/lab2.h"
 #include "window.h"
 
 int main() {
@@ -13,7 +13,7 @@ int main() {
   unsigned int shaderProgram =
       createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-  loadAllLetters(window, shaderProgram);
+  drawShapes(window, shaderProgram);
 
   glDeleteProgram(shaderProgram);
   glfwTerminate();

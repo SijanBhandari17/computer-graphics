@@ -5,6 +5,10 @@
 #include <cmath>
 #include <vector>
 #include "lab2.h"
+#include "../window.h"
+
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 700;
 
 std::vector<std::pair<int, int>> DDA(int x1, int x2, int y1, int y2) {
   std::vector<std::pair<int, int>> points;
@@ -26,10 +30,30 @@ std::vector<std::pair<int, int>> DDA(int x1, int x2, int y1, int y2) {
   return points;
 }
 
+void createMesh(const std::vector<std::pair<int, int>> &points,
+                unsigned int &VAO, unsigned int &VBO) {
+  std::vector<float> vertices;
+  for (const auto &[x, y] : points) {
+    vertices.push_back(((float)x / SCR_WIDTH) * 2.0f - 1.0f);
+    vertices.push_back(((float)y / SCR_HEIGHT) * 2.0f - 1.0f);
+  }
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+               vertices.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+}
+
 void drawShapes(GLFWwindow *window, unsigned int shaderProgram) {
+  std::vector<std::pair<int, int>> linePoints = DDA(100, 300, 200, 500);
 
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+  unsigned int VAO, VBO;
+  createMesh(linePoints, VAO, VBO);
+  glPointSize(3.0f);
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -37,13 +61,14 @@ void drawShapes(GLFWwindow *window, unsigned int shaderProgram) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-    for (auto &m : meshes)
-      drawMesh(m);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_POINTS, 0, linePoints.size());
+    glBindVertexArray(0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
-  for (auto &m : meshes)
-    deleteMesh(m);
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1, &VBO);
 }
