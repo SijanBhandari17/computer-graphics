@@ -22,5 +22,4 @@ void loadLetter(std::vector<Mesh> &meshes,
 
 void loadAllLetters(GLFWwindow *window, unsigned int shaderProgram);
 
-void processInput(GLFWwindow *window);
 #endif

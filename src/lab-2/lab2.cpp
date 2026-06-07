@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
@@ -9,6 +10,24 @@
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 700;
+
+void createMesh(const std::vector<std::pair<int, int>> &points,
+                unsigned int &VAO, unsigned int &VBO) {
+  std::vector<float> vertices;
+  for (const auto &[x, y] : points) {
+    vertices.push_back(((float)x / SCR_WIDTH) * 2.0f - 1.0f);
+    vertices.push_back(((float)y / SCR_HEIGHT) * 2.0f - 1.0f);
+  }
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+               vertices.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+}
 
 std::vector<std::pair<int, int>> DDA(int x1, int y1, int x2, int y2) {
   std::vector<std::pair<int, int>> points;
@@ -71,29 +90,74 @@ std::vector<std::pair<int, int>> BressenhamLineDrawing(int x1, int y1, int x2,
   return points;
 }
 
-void createMesh(const std::vector<std::pair<int, int>> &points,
-                unsigned int &VAO, unsigned int &VBO) {
-  std::vector<float> vertices;
-  for (const auto &[x, y] : points) {
-    vertices.push_back(((float)x / SCR_WIDTH) * 2.0f - 1.0f);
-    vertices.push_back(((float)y / SCR_HEIGHT) * 2.0f - 1.0f);
+std::vector<std::pair<int, int>> MidPointCircle(int xc, int yc, int r) {
+  std::vector<std::pair<int, int>> points;
+  int x = 0, y = r;
+  int p = 1 - r;
+  points.push_back({xc + x, yc + y});
+  while (x < y) {
+    x += 1;
+    if (p < 0) {
+      p += 2 * x + 1;
+    } else {
+      y += -1;
+      p += 2 * x + 1 - 2 * y;
+    }
+    points.push_back({x + xc, y + yc});
   }
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glBindVertexArray(VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-               vertices.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-  glBindVertexArray(0);
+  return points;
+}
+
+std::vector<std::pair<int, int>> Histrogram(std::vector<int> &data) {
+  int fx = 10, fy = 10;
+  int y = *std::max_element(data.begin(), data.end());
+  int x = data.size();
+
+  const int initx = 100;
+  const int inity = 100;
+
+  std::vector<std::pair<int, int>> axes;
+  std::vector<std::pair<int, int>> axes1 =
+      BressenhamLineDrawing(initx, inity, initx, y + inity * 2);
+  std::vector<std::pair<int, int>> axes2 =
+      BressenhamLineDrawing(initx, inity, x * initx + initx * 2, inity);
+  axes.insert(axes.end(), axes1.begin(), axes1.end());
+  axes.insert(axes.end(), axes2.begin(), axes2.end());
+
+  for (int i = 0; i < x; i++) {
+
+    int barLeft = initx + i * initx;
+    int barTop = data[i] + inity;
+    int barRight = initx + (i + 1) * initx;
+
+    std::vector<std::pair<int, int>> l1 =
+        BressenhamLineDrawing(barLeft, inity, barLeft, barTop);
+
+    std::vector<std::pair<int, int>> l2 =
+        BressenhamLineDrawing(barLeft, barTop, barRight, barTop);
+
+    std::vector<std::pair<int, int>> l3;
+    for (auto &m : l1) {
+      l3.push_back({m.first + initx, m.second});
+    }
+    axes.insert(axes.end(), l1.begin(), l1.end());
+    axes.insert(axes.end(), l2.begin(), l2.end());
+    axes.insert(axes.end(), l3.begin(), l3.end());
+  }
+
+  return axes;
 }
 
 void drawShapes(GLFWwindow *window, unsigned int shaderProgram) {
   // std::vector<std::pair<int, int>> linePoints = DDA(100, 100, 500, 500);
 
-  std::vector<std::pair<int, int>> linePoints =
-      BressenhamLineDrawing(100, 100, 500, 500);
+  // std::vector<std::pair<int, int>> linePoints =
+  //     BressenhamLineDrawing(100, 100, 500, 500);
+
+  // std::vector<std::pair<int, int>> linePoints = MidPointCircle(0, 0, 200);
+
+  std::vector<int> data = {100, 150, 200, 50, 300};
+  auto linePoints = Histrogram(data);
   unsigned int VAO, VBO;
   createMesh(linePoints, VAO, VBO);
   glPointSize(3.0f);
