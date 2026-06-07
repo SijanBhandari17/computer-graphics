@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "lab1.h"
+#include "../window.h"
 
 const std::vector<std::vector<float>> letterS = {
     // top bar
@@ -107,11 +108,6 @@ void loadLetter(std::vector<Mesh> &meshes,
                 float offsetX, float offsetY) {
   for (auto &verts : letter)
     meshes.push_back(createMesh(transform(verts, scale, offsetX, offsetY), 3));
-}
-
-void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, true);
 }
 
 void loadAllLetters(GLFWwindow *window, unsigned int shaderProgram) {
