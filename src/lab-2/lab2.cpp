@@ -10,7 +10,7 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 700;
 
-std::vector<std::pair<int, int>> DDA(int x1, int x2, int y1, int y2) {
+std::vector<std::pair<int, int>> DDA(int x1, int y1, int x2, int y2) {
   std::vector<std::pair<int, int>> points;
   int dx = x2 - x1;
   int dy = y2 - y1;
@@ -26,6 +26,47 @@ std::vector<std::pair<int, int>> DDA(int x1, int x2, int y1, int y2) {
     x += xInc;
     y += yInc;
     points.push_back({std::round(x), std::round(y)});
+  }
+  return points;
+}
+
+std::vector<std::pair<int, int>> BressenhamLineDrawing(int x1, int y1, int x2,
+                                                       int y2) {
+  std::vector<std::pair<int, int>> points;
+  int del_x = x2 - x1;
+  int del_y = y2 - y1;
+  int x = x1, y = y1;
+  points.push_back({x, y});
+
+  int sx = (del_x > 0) ? 1 : -1;
+  int sy = (del_y > 0) ? 1 : -1;
+  int adx = abs(del_x);
+  int ady = abs(del_y);
+
+  if (ady <= adx) {
+    int p = 2 * ady - adx;
+    for (int i = 0; i < adx; i++) {
+      x += sx;
+      if (p < 0) {
+        p += 2 * ady;
+      } else {
+        y += sy;
+        p += 2 * (ady - adx);
+      }
+      points.push_back({x, y});
+    }
+  } else {
+    int p = 2 * adx - ady;
+    for (int i = 0; i < ady; i++) {
+      y += sy;
+      if (p < 0) {
+        p += 2 * adx;
+      } else {
+        x += sx;
+        p += 2 * (adx - ady);
+      }
+      points.push_back({x, y});
+    }
   }
   return points;
 }
@@ -49,8 +90,10 @@ void createMesh(const std::vector<std::pair<int, int>> &points,
 }
 
 void drawShapes(GLFWwindow *window, unsigned int shaderProgram) {
-  std::vector<std::pair<int, int>> linePoints = DDA(100, 300, 200, 500);
+  // std::vector<std::pair<int, int>> linePoints = DDA(100, 100, 500, 500);
 
+  std::vector<std::pair<int, int>> linePoints =
+      BressenhamLineDrawing(100, 100, 500, 500);
   unsigned int VAO, VBO;
   createMesh(linePoints, VAO, VBO);
   glPointSize(3.0f);
