@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <numeric>
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -16,7 +17,7 @@ void createMesh(const std::vector<std::pair<int, int>> &points,
   std::vector<float> vertices;
   for (const auto &[x, y] : points) {
     vertices.push_back(((float)x / SCR_WIDTH) * 2.0f - 1.0f);
-    vertices.push_back(((float)y / SCR_HEIGHT) * 2.0f - 1.0f);
+    vertices.push_back(((float)y / SCR_WIDTH) * 2.0f - 1.0f);
   }
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -94,7 +95,10 @@ std::vector<std::pair<int, int>> MidPointCircle(int xc, int yc, int r) {
   std::vector<std::pair<int, int>> points;
   int x = 0, y = r;
   int p = 1 - r;
-  points.push_back({xc + x, yc + y});
+  points.push_back({xc, yc + r});
+  points.push_back({xc, yc - r});
+  points.push_back({xc + r, yc});
+  points.push_back({xc - r, yc});
   while (x < y) {
     x += 1;
     if (p < 0) {
@@ -103,7 +107,15 @@ std::vector<std::pair<int, int>> MidPointCircle(int xc, int yc, int r) {
       y += -1;
       p += 2 * x + 1 - 2 * y;
     }
-    points.push_back({x + xc, y + yc});
+
+    points.push_back({xc + x, yc + y});
+    points.push_back({xc + y, yc + x});
+    points.push_back({xc - x, yc + y});
+    points.push_back({xc - y, yc + x});
+    points.push_back({xc - x, yc - y});
+    points.push_back({xc - y, yc - x});
+    points.push_back({xc + x, yc - y});
+    points.push_back({xc + y, yc - x});
   }
   return points;
 }
@@ -148,16 +160,52 @@ std::vector<std::pair<int, int>> Histrogram(std::vector<int> &data) {
   return axes;
 }
 
+std::vector<std::pair<int, int>> DrawPieChart(std::vector<int> data) {
+
+  int total = std::accumulate(data.begin(), data.end(), 0);
+  std::vector<float> degrees;
+  std::vector<std::pair<int, int>> plottingPoints;
+
+  for (auto &m : data)
+    degrees.push_back((static_cast<float>(m) / total) * 360.0f);
+
+  auto append = [&](std::vector<std::pair<int, int>> pts) {
+    plottingPoints.insert(plottingPoints.end(), pts.begin(), pts.end());
+  };
+
+  int r = 100;
+  int xc = 400;
+  int yc = 400;
+
+  append(MidPointCircle(xc, yc, r));
+  append(BressenhamLineDrawing(xc, yc, xc + r, yc));
+
+  float cumAngle = 0.0f;
+  for (int i = 0; i < data.size(); i++) {
+    cumAngle += degrees[i];
+    float rad = cumAngle * M_PI / 180.0f;
+
+    int xNew = xc + static_cast<int>(r * cos(rad));
+    int yNew = yc + static_cast<int>(r * sin(rad));
+    append(BressenhamLineDrawing(xc, yc, xNew, yNew));
+  }
+  return plottingPoints;
+}
+
 void drawShapes(GLFWwindow *window, unsigned int shaderProgram) {
   // std::vector<std::pair<int, int>> linePoints = DDA(100, 100, 500, 500);
 
   // std::vector<std::pair<int, int>> linePoints =
   //     BressenhamLineDrawing(100, 100, 500, 500);
 
-  // std::vector<std::pair<int, int>> linePoints = MidPointCircle(0, 0, 200);
+  // std::vector<std::pair<int, int>> linePoints = MidPointCircle(400, 400,
+  // 100);
 
-  std::vector<int> data = {100, 150, 200, 50, 300};
-  auto linePoints = Histrogram(data);
+  std::vector<int> data = {10, 20, 25, 15, 10};
+  // auto linePoints = Histrogram(data);
+
+  auto linePoints = DrawPieChart(data);
+
   unsigned int VAO, VBO;
   createMesh(linePoints, VAO, VBO);
   glPointSize(3.0f);
