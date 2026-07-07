@@ -12,8 +12,8 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/shaders.cpp
     src/window.cpp
-    src/lab-2/lab2.cpp
-    glad.c   # add glad.c as a source
+    src/lab-3/lab3.cpp
+    glad.c   
 )
 add_custom_target(run
     COMMAND ./OpenGLApp

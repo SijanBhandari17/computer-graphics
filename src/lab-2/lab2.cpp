@@ -3,7 +3,6 @@
 #include <GLFW/glfw3.h>
 #include <numeric>
 #include <vector>
-#include <iostream>
 #include <cmath>
 #include <vector>
 #include "lab2.h"
@@ -41,8 +40,6 @@ std::vector<std::pair<int, int>> DDA(int x1, int y1, int x2, int y2) {
   float y = y1;
   points.push_back({x1, y1});
   for (int i = 0; i <= steps; i++) {
-    std::cout << "Plotting point: (" << std::round(x) << ", " << round(y)
-              << ")\n";
     x += xInc;
     y += yInc;
     points.push_back({std::round(x), std::round(y)});
@@ -191,18 +188,29 @@ std::vector<std::pair<int, int>> DrawPieChart(std::vector<int> data) {
   }
   return plottingPoints;
 }
+//
+// void DrawEllipse(int xc, int yc, int rx, int ry) {
+//
+//   std::vector<std::pair<int, int>> points;
+//   int x = 0, y = ry;
+//   int p = 1 - r;
+//   points.push_back({xc, yc + r});
+//   points.push_back({xc, yc - r});
+//   points.push_back({xc + r, yc});
+//   points.push_back({xc - r, yc});
+// }
 
 void drawShapes(GLFWwindow *window, unsigned int shaderProgram) {
   // std::vector<std::pair<int, int>> linePoints = DDA(100, 100, 500, 500);
 
   // std::vector<std::pair<int, int>> linePoints =
-  //     BressenhamLineDrawing(100, 100, 500, 500);
+  //     BressenhamLineDrawing(200, 500, 600, 300);
 
   // std::vector<std::pair<int, int>> linePoints = MidPointCircle(400, 400,
   // 100);
 
-  std::vector<int> data = {10, 20, 25, 15, 10};
-  // auto linePoints = Histrogram(data);
+  std::vector<int> data = {100, 150, 200, 50, 300};
+  // auto linePoints = DDA(data);
 
   auto linePoints = DrawPieChart(data);
 

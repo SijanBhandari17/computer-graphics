@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "lab-2/lab2.h"
+#include "lab-3/lab3.h"
 #include "window.h"
 
 int main() {
@@ -13,7 +14,7 @@ int main() {
   unsigned int shaderProgram =
       createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-  drawShapes(window, shaderProgram);
+  Transformation(window, shaderProgram);
 
   glDeleteProgram(shaderProgram);
   glfwTerminate();
