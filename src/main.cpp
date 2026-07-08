@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include "lab-2/lab2.h"
 #include "lab-3/lab3.h"
+#include "lab-1/lab1.h"
 #include "window.h"
 
 int main() {

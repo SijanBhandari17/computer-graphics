@@ -5,7 +5,6 @@
 #include <vector>
 #include "../window.h"
 #include "lab3.h"
-#include <numbers>
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -16,33 +15,6 @@ constexpr double PI = 3.14159265358979323846;
 
 constexpr double degToRad(double degrees) { return degrees * (PI / 180.0); }
 
-Mat3 TranslationMatrix(float tx, float ty) {
-  return {{{1, 0, tx}, {0, 1, ty}, {0, 0, 1}}};
-}
-
-Mat3 ScalingMatrix(float sx, float sy) {
-  return {{{sx, 0, 0}, {0, sy, 0}, {0, 0, 1}}};
-}
-
-Mat3 ReflectXMatrix() { return {{{1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}; }
-
-Mat3 ReflectYMatrix() { return {{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}}}; }
-
-Mat3 ReflectOriginMatrix() { return {{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}; }
-
-Mat3 ReflectYEqualsXMatrix() { return {{{0, 1, 0}, {1, 0, 0}, {0, 0, 1}}}; }
-
-Mat3 RotationMatrix(int degrees) {
-  float radians = degToRad(degrees);
-  float sinValue = std::sin(radians);
-  float cosValue = std::cos(radians);
-  return {{{cosValue, -sinValue, 0}, {sinValue, cosValue, 0}, {0, 0, 1}}};
-}
-
-Mat3 ShearMatrix(float shx, float shy) {
-  return {{{1, shx, 0}, {shy, 1, 0}, {0, 0, 1}}};
-}
-
 Rectangle CreateRectangle(float x, float y, float w, float h) {
   Rectangle r;
   r.x = x;
@@ -52,6 +24,19 @@ Rectangle CreateRectangle(float x, float y, float w, float h) {
   r.vertices = {{x, y}, {x + w, y}, {x + w, y + h}, {x, y + h}};
 
   return r;
+}
+
+Mat3 MultiplyMatrices(const Mat3 &a, const Mat3 &b) {
+  Mat3 result{};
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      result[i][j] = 0;
+      for (int k = 0; k < 3; k++) {
+        result[i][j] += a[i][k] * b[k][j];
+      }
+    }
+  }
+  return result;
 }
 
 void createMesh(const std::vector<std::pair<int, int>> &points,
@@ -129,6 +114,9 @@ std::pair<float, float> ApplyTransformation(Mat3 &m,
   return {out[0], out[1]};
 }
 
+Mat3 TranslationMatrix(float tx, float ty) {
+  return {{{1, 0, tx}, {0, 1, ty}, {0, 0, 1}}};
+}
 Rectangle TranslateRectangle(Rectangle &rect, float dx, float dy) {
   Mat3 matrix = TranslationMatrix(dx, dy);
   Rectangle out = rect;
@@ -139,6 +127,12 @@ Rectangle TranslateRectangle(Rectangle &rect, float dx, float dy) {
   return out;
 }
 
+Mat3 RotationMatrix(int degrees) {
+  float radians = degToRad(degrees);
+  float sinValue = std::sin(radians);
+  float cosValue = std::cos(radians);
+  return {{{cosValue, -sinValue, 0}, {sinValue, cosValue, 0}, {0, 0, 1}}};
+}
 Rectangle RotateRectangle(Rectangle &rect, float degree) {
   Mat3 rot = RotationMatrix(degree);
 
@@ -162,16 +156,12 @@ Rectangle RotateRectangle(Rectangle &rect, float degree) {
   return out;
 }
 
+Mat3 ScalingMatrix(float sx, float sy) {
+  return {{{sx, 0, 0}, {0, sy, 0}, {0, 0, 1}}};
+}
 Rectangle ScaleRectangle(Rectangle &rect, float sx, float sy) {
 
   Mat3 rot = ScalingMatrix(sx, sy);
-
-  // float cx = rect.x + rect.width / 2.0f;
-  // float cy = rect.y + rect.height / 2.0f;
-
-  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
-  // Mat3 backToPlace = TranslationMatrix(cx, cy);
-
   Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
   Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
 
@@ -185,16 +175,15 @@ Rectangle ScaleRectangle(Rectangle &rect, float sx, float sy) {
   }
   return out;
 }
+
+Mat3 ReflectXMatrix() { return {{{1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}; }
+Mat3 ReflectYMatrix() { return {{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}}}; }
+Mat3 ReflectOriginMatrix() { return {{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}; }
+Mat3 ReflectYEqualsXMatrix() { return {{{0, 1, 0}, {1, 0, 0}, {0, 0, 1}}}; }
 
 Rectangle ReflectRectangle(Rectangle &rect) {
 
-  Mat3 rot = ReflectOriginMatrix();
-
-  // float cx = rect.x + rect.width / 2.0f;
-  // float cy = rect.y + rect.height / 2.0f;
-
-  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
-  // Mat3 backToPlace = TranslationMatrix(cx, cy);
+  Mat3 rot = ReflectXMatrix();
 
   Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
   Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
@@ -210,16 +199,13 @@ Rectangle ReflectRectangle(Rectangle &rect) {
   return out;
 }
 
+Mat3 ShearMatrix(float shx, float shy) {
+  return {{{1, shx, 0}, {shy, 1, 0}, {0, 0, 1}}};
+}
 Rectangle ShearRectangle(Rectangle &rect, float shx, float shy) {
 
   Mat3 rot = ShearMatrix(shx, shy);
 
-  // float cx = rect.x + rect.width / 2.0f;
-  // float cy = rect.y + rect.height / 2.0f;
-
-  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
-  // Mat3 backToPlace = TranslationMatrix(cx, cy);
-
   Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
   Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
 
@@ -230,6 +216,33 @@ Rectangle ShearRectangle(Rectangle &rect, float shx, float shy) {
     auto rotated = ApplyTransformation(rot, centered);
     auto final_ = ApplyTransformation(backToPlace, rotated);
     out.vertices.push_back(final_);
+  }
+  return out;
+}
+
+Rectangle CompositeTransform(Rectangle &rect, float dx, float dy, float degree,
+                             float sx, float sy, float shx, float shy) {
+
+  float cx = rect.x;
+  float cy = rect.y;
+  Mat3 toOrigin = TranslationMatrix(-cx, -cy);
+  Mat3 backToPlace = TranslationMatrix(cx, cy);
+
+  Mat3 R = RotationMatrix(degree);
+  Mat3 S = ScalingMatrix(sx, sy);
+  Mat3 Sh = ShearMatrix(shx, shy);
+  Mat3 T = TranslationMatrix(dx, dy);
+
+  Mat3 core = MultiplyMatrices(Sh, MultiplyMatrices(S, R));
+  Mat3 pivoted =
+      MultiplyMatrices(backToPlace, MultiplyMatrices(core, toOrigin));
+
+  Mat3 composite = MultiplyMatrices(T, pivoted);
+
+  Rectangle out = rect;
+  out.vertices.clear();
+  for (auto &v : rect.vertices) {
+    out.vertices.push_back(ApplyTransformation(composite, v));
   }
   return out;
 }
@@ -243,9 +256,12 @@ void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
   Rectangle rect = CreateRectangle(300, 200, 150, 80);
   // Rectangle moved = TranslateRectangle(rect, 10, -20);
   // Rectangle moved = RotateRectangle(rect, 45);
-  // Rectangle moved = ReflectRectangle(rect);
-  Rectangle moved = ShearRectangle(rect, 1.5, 1);
+  // Rectangle moved = ShearRectangle(rect, 0, 1);
+  // Rectangle moved =
+  //     CompositeTransform(rect, 50, 30, 45, 1.2f, 1.2f, 0.2f, 0.0f);
+  // Rectangle moved = ScaleRectangle(rect, 2, 2);
 
+  Rectangle moved = ReflectRectangle(rect);
   std::vector<std::pair<int, int>> linePoints;
   for (auto &v : rect.vertices)
     linePoints.push_back({(int)v.first, (int)v.second});
