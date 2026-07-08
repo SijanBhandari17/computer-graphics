@@ -12,13 +12,23 @@ const unsigned int SCR_HEIGHT = 600;
 
 using Mat3 = std::array<std::array<float, 3>, 3>;
 
+constexpr double PI = 3.14159265358979323846;
+
+constexpr double degToRad(double degrees) { return degrees * (PI / 180.0); }
+
 Mat3 TranslationMatrix(float tx, float ty) {
   return {{{1, 0, tx}, {0, 1, ty}, {0, 0, 1}}};
 }
 
+Mat3 ScalingMatrix(float sx, float sy) {
+  return {{{sx, 0, 0}, {0, sy, 0}, {0, 0, 1}}};
+}
+
 Mat3 RotationMatrix(int degrees) {
-  float radians = degrees * (std::numbers::pi / 180.0);
-  return {{{1, 0, tx}, {0, 1, ty}, {0, 0, 1}}};
+  float radians = degToRad(degrees);
+  float sinValue = std::sin(radians);
+  float cosValue = std::cos(radians);
+  return {{{cosValue, -sinValue, 0}, {sinValue, cosValue, 0}, {0, 0, 1}}};
 }
 
 Rectangle CreateRectangle(float x, float y, float w, float h) {
@@ -117,15 +127,30 @@ Rectangle TranslateRectangle(Rectangle &rect, float dx, float dy) {
   return out;
 }
 
-Rectangle RotateRectangle(Rectangle &rect, float dx, float dy) {
-  Mat3 matrix = TranslationMatrix(dx, dy);
+Rectangle RotateRectangle(Rectangle &rect, float degree) {
+  Mat3 rot = RotationMatrix(degree);
+
+  float cx = rect.x + rect.width / 2.0f;
+  float cy = rect.y + rect.height / 2.0f;
+
+  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
+  // Mat3 backToPlace = TranslationMatrix(cx, cy);
+
+  Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
+  Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
+
   Rectangle out = rect;
   out.vertices.clear();
-  for (auto &vectices : rect.vertices) {
-    out.vertices.push_back(ApplyTransformation(matrix, vectices));
+  for (auto &v : rect.vertices) {
+    auto centered = ApplyTransformation(toOrigin, v);
+    auto rotated = ApplyTransformation(rot, centered);
+    auto final_ = ApplyTransformation(backToPlace, rotated);
+    out.vertices.push_back(final_);
   }
   return out;
 }
+
+Rectangle SclaeRectangle(Rectangle &x, float sx, float sy) {}
 
 void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
 
@@ -134,7 +159,8 @@ void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
 
   unsigned int VAO, VBO;
   Rectangle rect = CreateRectangle(100, 100, 150, 80);
-  Rectangle moved = TranslateRectangle(rect, 10, -20);
+  // Rectangle moved = TranslateRectangle(rect, 10, -20);
+  Rectangle moved = RotateRectangle(rect, 45);
 
   std::vector<std::pair<int, int>> linePoints;
   for (auto &v : rect.vertices)
@@ -159,7 +185,7 @@ void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
     glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f); // white
     glDrawArrays(GL_LINE_LOOP, 0, 4);        // rect
                                              //
-    glUniform3f(colorLoc, 0.0f, 0.0f, 0.0f); // black
+    glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); // red
     glDrawArrays(GL_LINE_LOOP, 4, 4);        // moved
 
     glBindVertexArray(0);
