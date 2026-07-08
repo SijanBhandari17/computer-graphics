@@ -24,11 +24,23 @@ Mat3 ScalingMatrix(float sx, float sy) {
   return {{{sx, 0, 0}, {0, sy, 0}, {0, 0, 1}}};
 }
 
+Mat3 ReflectXMatrix() { return {{{1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}; }
+
+Mat3 ReflectYMatrix() { return {{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}}}; }
+
+Mat3 ReflectOriginMatrix() { return {{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}; }
+
+Mat3 ReflectYEqualsXMatrix() { return {{{0, 1, 0}, {1, 0, 0}, {0, 0, 1}}}; }
+
 Mat3 RotationMatrix(int degrees) {
   float radians = degToRad(degrees);
   float sinValue = std::sin(radians);
   float cosValue = std::cos(radians);
   return {{{cosValue, -sinValue, 0}, {sinValue, cosValue, 0}, {0, 0, 1}}};
+}
+
+Mat3 ShearMatrix(float shx, float shy) {
+  return {{{1, shx, 0}, {shy, 1, 0}, {0, 0, 1}}};
 }
 
 Rectangle CreateRectangle(float x, float y, float w, float h) {
@@ -130,8 +142,8 @@ Rectangle TranslateRectangle(Rectangle &rect, float dx, float dy) {
 Rectangle RotateRectangle(Rectangle &rect, float degree) {
   Mat3 rot = RotationMatrix(degree);
 
-  float cx = rect.x + rect.width / 2.0f;
-  float cy = rect.y + rect.height / 2.0f;
+  // float cx = rect.x + rect.width / 2.0f;
+  // float cy = rect.y + rect.height / 2.0f;
 
   // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
   // Mat3 backToPlace = TranslationMatrix(cx, cy);
@@ -150,7 +162,77 @@ Rectangle RotateRectangle(Rectangle &rect, float degree) {
   return out;
 }
 
-Rectangle SclaeRectangle(Rectangle &x, float sx, float sy) {}
+Rectangle ScaleRectangle(Rectangle &rect, float sx, float sy) {
+
+  Mat3 rot = ScalingMatrix(sx, sy);
+
+  // float cx = rect.x + rect.width / 2.0f;
+  // float cy = rect.y + rect.height / 2.0f;
+
+  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
+  // Mat3 backToPlace = TranslationMatrix(cx, cy);
+
+  Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
+  Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
+
+  Rectangle out = rect;
+  out.vertices.clear();
+  for (auto &v : rect.vertices) {
+    auto centered = ApplyTransformation(toOrigin, v);
+    auto rotated = ApplyTransformation(rot, centered);
+    auto final_ = ApplyTransformation(backToPlace, rotated);
+    out.vertices.push_back(final_);
+  }
+  return out;
+}
+
+Rectangle ReflectRectangle(Rectangle &rect) {
+
+  Mat3 rot = ReflectOriginMatrix();
+
+  // float cx = rect.x + rect.width / 2.0f;
+  // float cy = rect.y + rect.height / 2.0f;
+
+  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
+  // Mat3 backToPlace = TranslationMatrix(cx, cy);
+
+  Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
+  Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
+
+  Rectangle out = rect;
+  out.vertices.clear();
+  for (auto &v : rect.vertices) {
+    auto centered = ApplyTransformation(toOrigin, v);
+    auto rotated = ApplyTransformation(rot, centered);
+    auto final_ = ApplyTransformation(backToPlace, rotated);
+    out.vertices.push_back(final_);
+  }
+  return out;
+}
+
+Rectangle ShearRectangle(Rectangle &rect, float shx, float shy) {
+
+  Mat3 rot = ShearMatrix(shx, shy);
+
+  // float cx = rect.x + rect.width / 2.0f;
+  // float cy = rect.y + rect.height / 2.0f;
+
+  // Mat3 toOrigin = TranslationMatrix(-cx, -cy);
+  // Mat3 backToPlace = TranslationMatrix(cx, cy);
+
+  Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
+  Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
+
+  Rectangle out = rect;
+  out.vertices.clear();
+  for (auto &v : rect.vertices) {
+    auto centered = ApplyTransformation(toOrigin, v);
+    auto rotated = ApplyTransformation(rot, centered);
+    auto final_ = ApplyTransformation(backToPlace, rotated);
+    out.vertices.push_back(final_);
+  }
+  return out;
+}
 
 void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
 
@@ -158,9 +240,11 @@ void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
   // createMesh(linePoints, VAO, VBO);
 
   unsigned int VAO, VBO;
-  Rectangle rect = CreateRectangle(100, 100, 150, 80);
+  Rectangle rect = CreateRectangle(300, 200, 150, 80);
   // Rectangle moved = TranslateRectangle(rect, 10, -20);
-  Rectangle moved = RotateRectangle(rect, 45);
+  // Rectangle moved = RotateRectangle(rect, 45);
+  // Rectangle moved = ReflectRectangle(rect);
+  Rectangle moved = ShearRectangle(rect, 1.5, 1);
 
   std::vector<std::pair<int, int>> linePoints;
   for (auto &v : rect.vertices)
