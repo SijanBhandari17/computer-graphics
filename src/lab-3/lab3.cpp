@@ -5,9 +5,21 @@
 #include <vector>
 #include "../window.h"
 #include "lab3.h"
+#include <numbers>
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+using Mat3 = std::array<std::array<float, 3>, 3>;
+
+Mat3 TranslationMatrix(float tx, float ty) {
+  return {{{1, 0, tx}, {0, 1, ty}, {0, 0, 1}}};
+}
+
+Mat3 RotationMatrix(int degrees) {
+  float radians = degrees * (std::numbers::pi / 180.0);
+  return {{{1, 0, tx}, {0, 1, ty}, {0, 0, 1}}};
+}
 
 Rectangle CreateRectangle(float x, float y, float w, float h) {
   Rectangle r;
@@ -15,10 +27,7 @@ Rectangle CreateRectangle(float x, float y, float w, float h) {
   r.y = y;
   r.width = w;
   r.height = h;
-
-  r.vertices = {x, y, x + w, y,     x + w, y + h,
-
-                x, y, x + w, y + h, x,     y + h};
+  r.vertices = {{x, y}, {x + w, y}, {x + w, y + h}, {x, y + h}};
 
   return r;
 }
@@ -41,8 +50,6 @@ void createMesh(const std::vector<std::pair<int, int>> &points,
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 }
-
-void translation(int tx, int ty, std::vector<float> rect) {}
 
 std::vector<std::pair<int, int>> MidPointEllipse(int xc, int yc, int rx,
                                                  int ry) {
@@ -88,13 +95,57 @@ std::vector<std::pair<int, int>> MidPointEllipse(int xc, int yc, int rx,
   return points;
 }
 
+std::pair<float, float> ApplyTransformation(Mat3 &m,
+                                            std::pair<float, float> p) {
+  float vec[3] = {p.first, p.second, 1.0f};
+  float out[3] = {0, 0, 0};
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      out[i] += m[i][j] * vec[j];
+    }
+  }
+  return {out[0], out[1]};
+}
+
+Rectangle TranslateRectangle(Rectangle &rect, float dx, float dy) {
+  Mat3 matrix = TranslationMatrix(dx, dy);
+  Rectangle out = rect;
+  out.vertices.clear();
+  for (auto &vectices : rect.vertices) {
+    out.vertices.push_back(ApplyTransformation(matrix, vectices));
+  }
+  return out;
+}
+
+Rectangle RotateRectangle(Rectangle &rect, float dx, float dy) {
+  Mat3 matrix = TranslationMatrix(dx, dy);
+  Rectangle out = rect;
+  out.vertices.clear();
+  for (auto &vectices : rect.vertices) {
+    out.vertices.push_back(ApplyTransformation(matrix, vectices));
+  }
+  return out;
+}
+
 void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
 
-  auto linePoints = MidPointEllipse(300, 300, 100, 150);
-  unsigned int VAO, VBO;
-  createMesh(linePoints, VAO, VBO);
+  // auto linePoints = MidPointEllipse(300, 300, 100, 150);
+  // createMesh(linePoints, VAO, VBO);
 
+  unsigned int VAO, VBO;
+  Rectangle rect = CreateRectangle(100, 100, 150, 80);
+  Rectangle moved = TranslateRectangle(rect, 10, -20);
+
+  std::vector<std::pair<int, int>> linePoints;
+  for (auto &v : rect.vertices)
+    linePoints.push_back({(int)v.first, (int)v.second});
+  for (auto &v : moved.vertices)
+    linePoints.push_back({(int)v.first, (int)v.second});
+  createMesh(linePoints, VAO, VBO);
   glPointSize(3.0f);
+
+  int colorLoc = glGetUniformLocation(shaderProgram, "uColor");
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -103,7 +154,14 @@ void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_POINTS, 0, linePoints.size());
+
+    // glDrawArrays(GL_POINTS, 0, linePoints.size());
+    glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f); // white
+    glDrawArrays(GL_LINE_LOOP, 0, 4);        // rect
+                                             //
+    glUniform3f(colorLoc, 0.0f, 0.0f, 0.0f); // black
+    glDrawArrays(GL_LINE_LOOP, 4, 4);        // moved
+
     glBindVertexArray(0);
 
     glfwSwapBuffers(window);
