@@ -1,9 +1,14 @@
 #ifndef LAB4_H
 #define LAB4_H
-#include <vector>
 #include <GLFW/glfw3.h>
-#include <array>
-#include <vector>
+
+struct Line {
+  double x1;
+  double y1;
+  double x2;
+  double y2;
+  int codel, coder;
+};
 
 void ClipLine(GLFWwindow *window, unsigned int shaderProgram);
 

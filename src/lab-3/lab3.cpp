@@ -4,7 +4,9 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "../window.h"
+#include "../mesh.h"
 #include "lab3.h"
+#include <array>
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -37,25 +39,6 @@ Mat3 MultiplyMatrices(const Mat3 &a, const Mat3 &b) {
     }
   }
   return result;
-}
-
-void createMesh(const std::vector<std::pair<int, int>> &points,
-                unsigned int &VAO, unsigned int &VBO) {
-  std::vector<float> vertices;
-  vertices.reserve(points.size() * 2);
-  for (const auto &p : points) {
-    vertices.push_back(((float)p.first / SCR_WIDTH) * 2.0f - 1.0f);
-    vertices.push_back(((float)p.second / SCR_HEIGHT) * 2.0f - 1.0f);
-  }
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glBindVertexArray(VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-               vertices.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-  glBindVertexArray(0);
 }
 
 std::vector<std::pair<int, int>> MidPointEllipse(int xc, int yc, int rx,
@@ -183,7 +166,7 @@ Mat3 ReflectYEqualsXMatrix() { return {{{0, 1, 0}, {1, 0, 0}, {0, 0, 1}}}; }
 
 Rectangle ReflectRectangle(Rectangle &rect) {
 
-  Mat3 rot = ReflectXMatrix();
+  Mat3 rot = ReflectOriginMatrix();
 
   Mat3 toOrigin = TranslationMatrix(-rect.x, -rect.y);
   Mat3 backToPlace = TranslationMatrix(rect.x, rect.y);
@@ -220,31 +203,95 @@ Rectangle ShearRectangle(Rectangle &rect, float shx, float shy) {
   return out;
 }
 
-Rectangle CompositeTransform(Rectangle &rect, float dx, float dy, float degree,
-                             float sx, float sy, float shx, float shy) {
+enum class TransformType { TRANSLATE, ROTATE, SCALE, SHEAR };
 
-  float cx = rect.x;
-  float cy = rect.y;
+struct TransformOp {
+  TransformType type;
+  float p1 = 0.0f;
+  float p2 = 0.0f;
+};
+
+Mat3 BuildOpMatrix(const TransformOp &op, float cx, float cy) {
   Mat3 toOrigin = TranslationMatrix(-cx, -cy);
   Mat3 backToPlace = TranslationMatrix(cx, cy);
 
-  Mat3 R = RotationMatrix(degree);
-  Mat3 S = ScalingMatrix(sx, sy);
-  Mat3 Sh = ShearMatrix(shx, shy);
-  Mat3 T = TranslationMatrix(dx, dy);
+  switch (op.type) {
+  case TransformType::TRANSLATE:
+    return TranslationMatrix(op.p1, op.p2);
+  case TransformType::ROTATE:
+    return MultiplyMatrices(backToPlace,
+                            MultiplyMatrices(RotationMatrix(op.p1), toOrigin));
+  case TransformType::SCALE:
+    return MultiplyMatrices(
+        backToPlace, MultiplyMatrices(ScalingMatrix(op.p1, op.p2), toOrigin));
+  case TransformType::SHEAR:
+    return MultiplyMatrices(
+        backToPlace, MultiplyMatrices(ShearMatrix(op.p1, op.p2), toOrigin));
+  }
+  return TranslationMatrix(0, 0);
+}
 
-  Mat3 core = MultiplyMatrices(Sh, MultiplyMatrices(S, R));
-  Mat3 pivoted =
-      MultiplyMatrices(backToPlace, MultiplyMatrices(core, toOrigin));
+Rectangle CompositeTransform(Rectangle &rect,
+                             const std::vector<TransformOp> &ops) {
+  float cx = rect.x;
+  float cy = rect.y;
 
-  Mat3 composite = MultiplyMatrices(T, pivoted);
+  Mat3 composite = TranslationMatrix(0, 0);
+
+  for (const auto &op : ops) {
+    Mat3 opMat = BuildOpMatrix(op, cx, cy);
+    composite = MultiplyMatrices(opMat, composite);
+  }
 
   Rectangle out = rect;
   out.vertices.clear();
-  for (auto &v : rect.vertices) {
+  for (auto &v : rect.vertices)
     out.vertices.push_back(ApplyTransformation(composite, v));
-  }
   return out;
+}
+
+std::vector<TransformOp> GetUserTransformSequence() {
+  std::vector<TransformOp> ops;
+  int n;
+  std::cout << "How many transformations to chain? ";
+  std::cin >> n;
+
+  for (int i = 0; i < n; ++i) {
+    std::cout << "\nTransform " << i + 1
+              << ": 1) Translate  2) Rotate  3) Scale  4) Shear\nChoice: ";
+    int choice;
+    std::cin >> choice;
+
+    TransformOp op;
+    switch (choice) {
+    case 1:
+      op.type = TransformType::TRANSLATE;
+      std::cout << "  dx dy: ";
+      std::cin >> op.p1 >> op.p2;
+      break;
+    case 2:
+      op.type = TransformType::ROTATE;
+      std::cout << "  angle (deg): ";
+      std::cin >> op.p1;
+      break;
+    case 3:
+      op.type = TransformType::SCALE;
+      std::cout << "  sx sy: ";
+      std::cin >> op.p1 >> op.p2;
+      break;
+    case 4:
+      op.type = TransformType::SHEAR;
+      std::cout << "  shx shy: ";
+      std::cin >> op.p1 >> op.p2;
+      break;
+    default:
+      std::cout << "  invalid, using no-op translate(0,0)\n";
+      op.type = TransformType::TRANSLATE;
+      break;
+    }
+    ops.push_back(op);
+  }
+  return ops;
 }
 
 void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
@@ -261,12 +308,15 @@ void Transformation(GLFWwindow *window, unsigned int shaderProgram) {
   //     CompositeTransform(rect, 50, 30, 45, 1.2f, 1.2f, 0.2f, 0.0f);
   // Rectangle moved = ScaleRectangle(rect, 2, 2);
 
-  Rectangle moved = ReflectRectangle(rect);
+  // Rectangle moved = ReflectRectangle(rect);
+  std::vector<TransformOp> ops = GetUserTransformSequence();
+  Rectangle moved = CompositeTransform(rect, ops);
   std::vector<std::pair<int, int>> linePoints;
   for (auto &v : rect.vertices)
     linePoints.push_back({(int)v.first, (int)v.second});
   for (auto &v : moved.vertices)
     linePoints.push_back({(int)v.first, (int)v.second});
+
   createMesh(linePoints, VAO, VBO);
   glPointSize(3.0f);
 

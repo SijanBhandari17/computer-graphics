@@ -2,7 +2,6 @@
 #define LAB3_H
 #include <vector>
 #include <GLFW/glfw3.h>
-#include <array>
 #include <vector>
 
 std::vector<std::pair<int, int>> MidPointEllipse(int xc, int yc, int rx,
