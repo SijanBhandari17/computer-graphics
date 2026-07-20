@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <array>
 #include <glad/glad.h>
 #include "lab4.h"
 #include <vector>
@@ -84,13 +86,45 @@ bool CohenSutherlandClipLines(Line &l) {
   return accept;
 }
 
+bool LiangBarskyClipLine(Line &l) {
+  double dx = l.x2 - l.x1;
+  double dy = l.y2 - l.y1;
+
+  std::array<double, 4> p = {-dx, dx, -dy, dy};
+  std::array<double, 4> q = {l.x1 - WINDOW_X_MIN, WINDOW_X_MAX - l.x1,
+                             l.y1 - WINDOW_Y_MIN, WINDOW_Y_MAX - l.y1};
+
+  double t1 = 0, t2 = 1;
+
+  for (int i = 0; i < 4; i++) {
+    if (p[i] == 0 && q[i] < 0)
+      return false;
+    if (p[i] < 0) {
+      double r = q[i] / p[i];
+      t1 = std::max(t1, r);
+    }
+    if (p[i] > 0) {
+      double r = q[i] / p[i];
+      t2 = std::min(t2, r);
+    }
+    if (t1 > t2)
+      return false;
+  }
+
+  l.x2 = l.x1 + t2 * dx;
+  l.y2 = l.y1 + t2 * dy;
+  l.x1 = l.x1 + t1 * dx;
+  l.y1 = l.y1 + t1 * dy;
+
+  return true;
+}
+
 void ClipLine(GLFWwindow *window, unsigned int shaderProgram) {
-  Line l1 = {50, 50, 300, 300};
+  Line l = {50, 50, 300, 300};
 
-  std::vector<std::pair<int, int>> originalLines = {{l1.x1, l1.y1},
-                                                    {l1.x2, l1.y2}};
+  std::vector<std::pair<int, int>> originalLines = {{l.x1, l.y1}, {l.x2, l.y2}};
 
-  bool accept = CohenSutherlandClipLines(l1);
+  bool accept = LiangBarskyClipLine(l);
   std::vector<std::pair<int, int>> windowPoints = {
       {WINDOW_X_MIN, WINDOW_Y_MIN},
       {WINDOW_X_MAX, WINDOW_Y_MIN},
@@ -105,8 +139,8 @@ void ClipLine(GLFWwindow *window, unsigned int shaderProgram) {
   std::vector<std::pair<int, int>> linePoints = {};
 
   if (accept) {
-    linePoints.push_back({l1.x1, l1.y1});
-    linePoints.push_back({l1.x2, l1.y2});
+    linePoints.push_back({l.x1, l.y1});
+    linePoints.push_back({l.x2, l.y2});
   }
 
   createMesh(linePoints, lineVAO, lineVBO);
