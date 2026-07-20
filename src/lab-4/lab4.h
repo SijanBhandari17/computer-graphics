@@ -12,4 +12,6 @@ struct Line {
 
 void ClipLine(GLFWwindow *window, unsigned int shaderProgram);
 
+void ClipPolygon(GLFWwindow *window, unsigned int shaderProgram);
+
 #endif

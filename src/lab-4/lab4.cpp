@@ -18,6 +18,21 @@ const int WINDOW_Y_MIN = 200;
 const int WINDOW_X_MAX = 700;
 const int WINDOW_Y_MAX = 400;
 
+enum class Edge { LEFT, RIGHT, BOTTOM, TOP };
+
+bool insideEdge(const std::pair<double, double> &p, Edge edge) {
+  switch (edge) {
+  case Edge::LEFT:
+    return p.first >= WINDOW_X_MIN;
+  case Edge::RIGHT:
+    return p.first <= WINDOW_X_MAX;
+  case Edge::BOTTOM:
+    return p.second >= WINDOW_Y_MIN;
+  case Edge::TOP:
+    return p.second <= WINDOW_Y_MAX;
+  }
+  return false;
+}
 int computeCode(double x, double y) {
   int code = INSIDE;
 
@@ -117,6 +132,122 @@ bool LiangBarskyClipLine(Line &l) {
   l.y1 = l.y1 + t1 * dy;
 
   return true;
+}
+
+std::pair<double, double> intersectEdge(const std::pair<double, double> &p1,
+                                        const std::pair<double, double> &p2,
+                                        Edge edge) {
+  double x1 = p1.first, y1 = p1.second;
+  double x2 = p2.first, y2 = p2.second;
+  double x, y;
+
+  switch (edge) {
+  case Edge::LEFT:
+    x = WINDOW_X_MIN;
+    y = y1 + (y2 - y1) * (WINDOW_X_MIN - x1) / (x2 - x1);
+    break;
+  case Edge::RIGHT:
+    x = WINDOW_X_MAX;
+    y = y1 + (y2 - y1) * (WINDOW_X_MAX - x1) / (x2 - x1);
+    break;
+  case Edge::BOTTOM:
+    y = WINDOW_Y_MIN;
+    x = x1 + (x2 - x1) * (WINDOW_Y_MIN - y1) / (y2 - y1);
+    break;
+  case Edge::TOP:
+    y = WINDOW_Y_MAX;
+    x = x1 + (x2 - x1) * (WINDOW_Y_MAX - y1) / (y2 - y1);
+    break;
+  }
+  return {x, y};
+};
+
+std::vector<std::pair<double, double>>
+clipAgainstEdge(const std::vector<std::pair<double, double>> &polygon,
+                Edge edge) {
+  std::vector<std::pair<double, double>> output;
+  if (polygon.empty())
+    return output;
+
+  size_t n = polygon.size();
+  for (size_t i = 0; i < n; i++) {
+    const auto &current = polygon[i];
+    const auto &prev = polygon[(i + n - 1) % n];
+
+    bool currentInside = insideEdge(current, edge);
+    bool prevInside = insideEdge(prev, edge);
+
+    if (currentInside) {
+      if (!prevInside)
+        output.push_back(intersectEdge(prev, current, edge));
+      output.push_back(current);
+    } else if (prevInside) {
+      output.push_back(intersectEdge(prev, current, edge));
+    }
+  }
+  return output;
+}
+
+std::vector<std::pair<double, double>>
+SutherlandHodgemanClip(const std::vector<std::pair<double, double>> &polygon) {
+  std::vector<std::pair<double, double>> output = polygon;
+  output = clipAgainstEdge(output, Edge::LEFT);
+  output = clipAgainstEdge(output, Edge::RIGHT);
+  output = clipAgainstEdge(output, Edge::BOTTOM);
+  output = clipAgainstEdge(output, Edge::TOP);
+  return output;
+}
+
+void ClipPolygon(GLFWwindow *window, unsigned int shaderProgram) {
+  std::vector<std::pair<double, double>> subject = {
+      {100, 150}, {350, 100}, {600, 450}, {450, 500}, {150, 350}};
+
+  std::vector<std::pair<int, int>> originalPoints;
+  for (auto &p : subject)
+    originalPoints.push_back({(int)p.first, (int)p.second});
+
+  auto clipped = SutherlandHodgemanClip(subject);
+
+  std::vector<std::pair<int, int>> clippedPoints;
+  for (auto &p : clipped)
+    clippedPoints.push_back({(int)p.first, (int)p.second});
+
+  std::vector<std::pair<int, int>> windowPoints = {
+      {WINDOW_X_MIN, WINDOW_Y_MIN},
+      {WINDOW_X_MAX, WINDOW_Y_MIN},
+      {WINDOW_X_MAX, WINDOW_Y_MAX},
+      {WINDOW_X_MIN, WINDOW_Y_MAX}};
+
+  unsigned windowVAO, windowVBO, subjectVAO, subjectVBO, clippedVAO, clippedVBO;
+  createMesh(windowPoints, windowVAO, windowVBO);
+  createMesh(originalPoints, subjectVAO, subjectVBO);
+  createMesh(clippedPoints, clippedVAO, clippedVBO);
+
+  int colorLoc = glGetUniformLocation(shaderProgram, "uColor");
+  while (!glfwWindowShouldClose(window)) {
+    processInput(window);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(shaderProgram);
+
+    glBindVertexArray(windowVAO);
+    glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f); // white - clip window
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+    glBindVertexArray(subjectVAO);
+    glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); // red - original polygon
+    glDrawArrays(GL_LINE_LOOP, 0, originalPoints.size());
+
+    if (!clippedPoints.empty()) {
+      glBindVertexArray(clippedVAO);
+      glUniform3f(colorLoc, 0.0f, 1.0f, 0.0f); // green - clipped polygon
+      glDrawArrays(GL_LINE_LOOP, 0, clippedPoints.size());
+    }
+
+    glBindVertexArray(0);
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+  }
 }
 
 void ClipLine(GLFWwindow *window, unsigned int shaderProgram) {

@@ -13,7 +13,8 @@ int main() {
   unsigned int shaderProgram =
       createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-  ClipLine(window, shaderProgram);
+  // ClipLine(window, shaderProgram);
+  ClipPolygon(window, shaderProgram);
 
   glDeleteProgram(shaderProgram);
   glfwTerminate();
