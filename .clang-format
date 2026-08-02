@@ -1,1 +1,5 @@
 SortIncludes: Never
+BasedOnStyle: Google
+ColumnLimit: 100
+BinPackArguments: true
+Cpp11BracedListStyle: true

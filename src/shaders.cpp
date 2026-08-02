@@ -6,10 +6,9 @@
 const char *vertexShaderSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
-
-void main()
-{
-    gl_Position = vec4(aPos, 1.0);
+uniform mat4 uMVP;
+void main() {
+    gl_Position = uMVP * vec4(aPos, 1.0);
 }
 )";
 
@@ -33,8 +32,8 @@ unsigned int compileShader(unsigned int type, const char *source) {
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
   if (!success) {
     glGetShaderInfoLog(shader, 512, NULL, infoLog);
-    std::cerr << "[Shader] Compile error ("
-              << (type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT") << "):\n"
+    std::cerr << "[Shader] Compile error (" << (type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT")
+              << "):\n"
               << infoLog << std::endl;
   }
   return shader;

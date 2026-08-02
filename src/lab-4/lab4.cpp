@@ -18,21 +18,6 @@ const int WINDOW_Y_MIN = 200;
 const int WINDOW_X_MAX = 700;
 const int WINDOW_Y_MAX = 400;
 
-enum class Edge { LEFT, RIGHT, BOTTOM, TOP };
-
-bool insideEdge(const std::pair<double, double> &p, Edge edge) {
-  switch (edge) {
-  case Edge::LEFT:
-    return p.first >= WINDOW_X_MIN;
-  case Edge::RIGHT:
-    return p.first <= WINDOW_X_MAX;
-  case Edge::BOTTOM:
-    return p.second >= WINDOW_Y_MIN;
-  case Edge::TOP:
-    return p.second <= WINDOW_Y_MAX;
-  }
-  return false;
-}
 int computeCode(double x, double y) {
   int code = INSIDE;
 
@@ -54,7 +39,6 @@ bool CohenSutherlandClipLines(Line &l) {
   int code1 = computeCode(x1, y1);
   int code2 = computeCode(x2, y2);
   bool accept = false;
-
   while (true) {
     if ((code1 | code2) == 0) {
       accept = true;
@@ -65,7 +49,6 @@ bool CohenSutherlandClipLines(Line &l) {
       double x, y;
       int codeOut = code1 != 0 ? code1 : code2;
       double slope = (y2 - y1) / (x2 - x1);
-
       if (codeOut & TOP) {
         x = x1 + (WINDOW_Y_MAX - y1) / slope;
         y = WINDOW_Y_MAX;
@@ -75,11 +58,10 @@ bool CohenSutherlandClipLines(Line &l) {
       } else if (codeOut & RIGHT) {
         y = y1 + slope * (WINDOW_X_MAX - x1);
         x = WINDOW_X_MAX;
-      } else { // LEFT
+      } else {
         y = y1 + slope * (WINDOW_X_MIN - x1);
         x = WINDOW_X_MIN;
       }
-
       if (codeOut == code1) {
         x1 = x;
         y1 = y;
@@ -91,7 +73,6 @@ bool CohenSutherlandClipLines(Line &l) {
       }
     }
   }
-
   if (accept) {
     l.x1 = x1;
     l.y1 = y1;
@@ -132,6 +113,22 @@ bool LiangBarskyClipLine(Line &l) {
   l.y1 = l.y1 + t1 * dy;
 
   return true;
+}
+
+enum class Edge { LEFT, RIGHT, BOTTOM, TOP };
+
+bool insideEdge(const std::pair<double, double> &p, Edge edge) {
+  switch (edge) {
+  case Edge::LEFT:
+    return p.first >= WINDOW_X_MIN;
+  case Edge::RIGHT:
+    return p.first <= WINDOW_X_MAX;
+  case Edge::BOTTOM:
+    return p.second >= WINDOW_Y_MIN;
+  case Edge::TOP:
+    return p.second <= WINDOW_Y_MAX;
+  }
+  return false;
 }
 
 std::pair<double, double> intersectEdge(const std::pair<double, double> &p1,
@@ -251,7 +248,7 @@ void ClipPolygon(GLFWwindow *window, unsigned int shaderProgram) {
 }
 
 void ClipLine(GLFWwindow *window, unsigned int shaderProgram) {
-  Line l = {50, 50, 300, 300};
+  Line l = {500, 500, 300, 300};
 
   std::vector<std::pair<int, int>> originalLines = {{l.x1, l.y1}, {l.x2, l.y2}};
 

@@ -1,21 +1,19 @@
 #include <glad/glad.h>
-#include "lab-4/lab4.h"
+#include "lab-5/lab5.h"
 #include "shaders.h"
 #include <GLFW/glfw3.h>
 #include "window.h"
 
 int main() {
-
   GLFWwindow *window = createWindow(800, 600, "OpenGL First Name");
-  if (!window)
-    return -1;
+  if (!window) return -1;
 
-  unsigned int shaderProgram =
-      createShaderProgram(vertexShaderSource, fragmentShaderSource);
+  unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-  // ClipLine(window, shaderProgram);
-  ClipPolygon(window, shaderProgram);
+  DrawCube(window, shaderProgram);
 
+  // OrthographicProjection3D(window);
+  // RunTransformations3D(window);
   glDeleteProgram(shaderProgram);
   glfwTerminate();
   return 0;

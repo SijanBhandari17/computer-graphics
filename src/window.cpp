@@ -1,4 +1,5 @@
 #include <glad/glad.h>
+#include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -7,8 +8,7 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
 }
 
 void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, true);
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
 }
 
 GLFWwindow *createWindow(int width, int height, const char *title) {
@@ -31,6 +31,7 @@ GLFWwindow *createWindow(int width, int height, const char *title) {
     std::cerr << "[GLAD] Failed to initialize" << std::endl;
     return nullptr;
   }
+  glEnable(GL_DEPTH_TEST);
 
   return window;
 }
