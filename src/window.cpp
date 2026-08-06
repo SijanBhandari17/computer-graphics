@@ -7,6 +7,9 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
+void processInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
+}
 GLFWwindow *createWindow(int width, int height, const char *title) {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -27,7 +30,7 @@ GLFWwindow *createWindow(int width, int height, const char *title) {
     std::cerr << "[GLAD] Failed to initialize" << std::endl;
     return nullptr;
   }
-  glEnable(GL_DEPTH_TEST);
+  // glEnable(GL_DEPTH_TEST);
 
   return window;
 }

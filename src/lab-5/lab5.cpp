@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "lab5.h"
-#include "../window.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -73,7 +72,7 @@ void Cube::Draw(unsigned int shaderProgram) {
   glBindVertexArray(0);
 }
 
-void processInput(GLFWwindow* window) {
+void processInput3D(GLFWwindow* window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) currentMode = TransformMode::Translate;
   if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) currentMode = TransformMode::Rotate;
@@ -98,7 +97,7 @@ void DrawCube(GLFWwindow* window, unsigned int shaderProgram) {
   glEnable(GL_DEPTH_TEST);
 
   while (!glfwWindowShouldClose(window)) {
-    processInput(window);
+    processInput3D(window);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -114,7 +113,7 @@ void DrawCube(GLFWwindow* window, unsigned int shaderProgram) {
     if (currentProjection == ProjectionMode::Perspective) {
       proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     } else {
-      float orthoSize = 3.0f;  // half-height of the visible box, in world units
+      float orthoSize = 2.0f;  // half-height of the visible box, in world units
       float aspect = 800.0f / 600.0f;
       proj = glm::ortho(-orthoSize * aspect, orthoSize * aspect,  // left, right
                         -orthoSize, orthoSize,                    // bottom, top
@@ -137,12 +136,12 @@ void DrawCube(GLFWwindow* window, unsigned int shaderProgram) {
       case TransformMode::Translate: {
         float offsetx = 1.0f;
         float offsety = 0.5f;
-        float offsetz = 0.5f;
+        float offsetz = 1.0f;
         transformed = glm::translate(transformed, glm::vec3(offsetx, offsety, offsetz));
         break;
       }
       case TransformMode::Rotate: {
-        float angle = (float)glfwGetTime();
+        float angle = glm::radians(90.0f);
         transformed = glm::rotate(transformed, angle, glm::vec3(0.0f, 1.0f, 0.0f));
         break;
       }

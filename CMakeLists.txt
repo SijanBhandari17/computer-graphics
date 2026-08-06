@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     src/window.cpp
     src/mesh.cpp
     src/lab-5/lab5.cpp
+    # src/lab-4/lab4.cpp
     glad.c   
 )
 add_custom_target(run

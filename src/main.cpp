@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include "lab-5/lab5.h"
+#include "lab-4/lab4.h"
 #include "shaders.h"
 #include <GLFW/glfw3.h>
 #include "window.h"
@@ -11,9 +12,8 @@ int main() {
   unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
   DrawCube(window, shaderProgram);
-
-  // OrthographicProjection3D(window);
-  // RunTransformations3D(window);
+  // ClipLine(window, shaderProgram);
+  // ClipPolygon(window, shaderProgram);
   glDeleteProgram(shaderProgram);
   glfwTerminate();
   return 0;
