@@ -3,7 +3,6 @@
 <h1 align="center">computer-graphics</h1>
 <p align="center"><em>C++ implementations of computer graphics coursework</em></p>
 
-![Last Commit](https://img.shields.io/github/last-commit/SijanBhandari17/computer-graphics?style=for-the-badge&color=a6e3a1) ![Issues](https://img.shields.io/github/issues/SijanBhandari17/computer-graphics?style=for-the-badge&color=f38ba8) ![Stars](https://img.shields.io/github/stars/SijanBhandari17/computer-graphics?style=for-the-badge&color=f9e2af) ![Forks](https://img.shields.io/github/forks/SijanBhandari17/computer-graphics?style=for-the-badge&color=89b4fa)
 
 ![C++](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 
@@ -18,8 +17,6 @@
 - [Tech Stack](#tech-stack)
 - [Installation](#installation)
 - [Folder Structure](#folder-structure)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
 
 ---
 
@@ -89,17 +86,3 @@ src/
 ```
 
 ---
-
-## Roadmap
-
-- [ ] Add more advanced lighting models
-- [ ] Implement texture mapping
-- [ ] Integrate physics simulations
-- [ ] Add support for multiple platforms
-- [ ] Optimize shader performance
-
----
-
-## Contributing
-
-Contributions are welcome! Please open an issue first to discuss major changes. Pull requests should follow the existing coding style and include tests where applicable.
